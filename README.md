@@ -4,23 +4,28 @@ A microservices-based fleet management system built with ASP.NET Core and Domain
 
 ## Architecture
 ```
-┌─────────────────┐     RabbitMQ      ┌─────────────────┐
-│   Fleet Service │ ◄────────────────► │   Trip Service  │
-│                 │                   │                 │
-│ - Vehicles      │                   │ - Trips         │
-│ - Drivers       │                   │ - GPS Tracking  │
-│ - State machine │                   │ - Availability  │
-│                 │                   │   Cache         │
-└────────┬────────┘                   └────────┬────────┘
-         │                                     │
-         ▼                                     ▼
-   fleet_db (PostgreSQL)              trip_db (PostgreSQL)
+                          RabbitMQ
+                             │
+    ┌────────────────────────┼────────────────────────┐
+    │                        │                        │
+    ▼                        ▼                        ▼
+┌───────────────┐ ┌──────────────┐ ┌──────────────────┐
+│ Fleet Service │ │ Trip Service │ │ Notification Svc │
+│               │ │              │ │                  │
+│ • Vehicles    │ │ • Trips      │ │ • Alerts         │
+│ • Drivers     │ │ • GPS Logs   │ │ • License Warn   │
+│ • Assignments │ │ • Trip Summary│ │ • Trip Summaries │
+│ • State Mgmt  │ │ • Tracking   │ │ • Fan-out Events │
+└───────┬───────┘ └──────┬───────┘ └────────┬─────────┘
+        │                 │                    │
+        ▼                 ▼                    ▼
+  fleet_db (PostgreSQL) trip_db (PostgreSQL) notification_db (PostgreSQL)
 ```
 
 ### Services
 - **Fleet Service** — manages vehicles, drivers, assignments and lifecycle states
 - **Trip Service** — manages trips, GPS tracking, communicates with Fleet via RabbitMQ
-
+- **Notification Service** — handles event-driven notifications by consuming messages from RabbitMQ and generating alerts for license expiry, vehicle maintenance, and trip updates with support for storing and retrieving user notifications.
 ### Infrastructure
 - **PostgreSQL** — separate database per service
 - **RabbitMQ** — async event communication between services
@@ -43,16 +48,17 @@ cd InMindProject
 docker-compose up --build
 ```
 
-This starts: PostgreSQL, Redis, RabbitMQ, Keycloak, Fleet Service, Trip Service.
+This starts: PostgreSQL, Redis, RabbitMQ, Keycloak, Fleet Service, Trip Service, Notification Service.
 
 Wait ~60 seconds for all services to be healthy, then access:
 
-| Service | URL |
-|---------|-----|
-| Fleet Service API | http://localhost:5141/swagger |
-| Trip Service API | http://localhost:5242/swagger |
-| RabbitMQ Management | http://localhost:15672 (guest/guest) |
-| Keycloak Admin | http://localhost:8080 (admin/admin) |
+| Service                  | URL                                  |
+|--------------------------|--------------------------------------|
+| Fleet Service API        | http://localhost:5141/swagger        |
+| Trip Service API         | http://localhost:5242/swagger        |
+| Notification Service API | http://localhost:5343/swagger        |
+| RabbitMQ Management      | http://localhost:15672 (guest/guest) |
+| Keycloak Admin           | http://localhost:8080 (admin/admin)  |
 
 ## Run locally (development)
 
@@ -84,6 +90,10 @@ dotnet run
 # Terminal 2
 cd TripService/TripService.API
 dotnet run
+
+# Terminal 3
+cd NotificationService/NotificationService.API
+dotnet run
 ```
 
 ## Keycloak Setup
@@ -104,12 +114,13 @@ curl -X POST http://localhost:8080/realms/fleet-management/protocol/openid-conne
 
 ## Roles
 
-| Role | Permissions |
-|------|------------|
-| Admin | Full access to both services |
-| FleetManager | Manage vehicles and drivers, read-only trips |
-| Dispatcher | Create and manage trips, read-only fleet |
-| Driver | View own trips, send GPS updates |
+| Role         | Fleet Service           | Trip Service                     | Notification Service |
+| ------------ | ----------------------- | -------------------------------- | -------------------- |
+| Admin        | Full access             | Full access                      | Full access          |
+| FleetManager | Manage vehicles/drivers | Read-only                        | View fleet alerts    |
+| Dispatcher   | Read-only               | Create/manage trips              | View trip alerts     |
+| Driver       | Read-only               | View own trips, send GPS updates | View trip summaries  |
+
 
 ## Running Tests
 ```bash
@@ -130,6 +141,11 @@ InMindProject/
 │   ├── TripService.Application/
 │   ├── TripService.Infrastructure/
 │   └── TripService.API/
+├── NotificationService/
+│   ├── NotificationService.Domain/
+│   ├── NotificationService.Application/
+│   ├── NotificationService.Infrastructure/
+│   └── NotificationService.API/
 ├── Shared/                         # Common base classes, exceptions, value objects
 ├── tests/
 │   ├── FleetService.Tests/
