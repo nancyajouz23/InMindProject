@@ -72,6 +72,7 @@ public class VehiclesController : ControllerBase
         return NoContent();
     }
 
+    
     // State transitions
 
     // PUT api/vehicles/{id}/activate
@@ -110,6 +111,7 @@ public class VehiclesController : ControllerBase
         return Ok(vehicle);
     }
 
+    
     // Assignment
 
     // PUT api/vehicles/{id}/assign/{driverId}

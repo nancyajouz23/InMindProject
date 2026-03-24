@@ -6,8 +6,6 @@ using Shared.Exceptions;
 
 namespace Shared.Middleware;
 
-// Catches all unhandled exceptions and maps them to consistent JSON error responses
-// Instead of getting a 500 with a stack trace, client gets a clean error object
 public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;

@@ -4,9 +4,6 @@ using Shared.ValueObjects;
 
 namespace TripService.Application.Services;
 
-// Runs all registered strategies and sums the results
-// Adding a new pricing rule = add a new strategy class + register it
-// No changes needed here — Open/Closed Principle in action
 public class TripPricingCalculator
 {
     private readonly IEnumerable<IPricingStrategy> _strategies;

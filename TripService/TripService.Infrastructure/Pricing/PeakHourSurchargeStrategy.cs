@@ -4,7 +4,6 @@ using Shared.ValueObjects;
 
 namespace TripService.Infrastructure.Pricing;
 
-// Adds a surcharge for trips during peak hours
 // Peak hours: 7-9 AM and 5-7 PM on weekdays
 public class PeakHourSurchargeStrategy : IPricingStrategy
 {

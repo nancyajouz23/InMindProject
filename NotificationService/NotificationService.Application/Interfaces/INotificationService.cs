@@ -1,5 +1,3 @@
-// NotificationService.Application.Interfaces.INotificationService.cs
-
 using NotificationService.Application.DTOs;
 
 namespace NotificationService.Application.Interfaces;

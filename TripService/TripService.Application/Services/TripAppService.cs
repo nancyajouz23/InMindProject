@@ -145,7 +145,6 @@ public class TripAppService
         var context = new PricingContext
         {
             // Trip Service cache stores vehicle type — get it from cache
-            // For now we use a default — see note below
             VehicleType = await _availabilityCache.GetVehicleTypeAsync(trip.VehicleId),
             DistanceKm  = trip.DistanceKm ?? 0,
             StartTime   = trip.StartTime  ?? DateTime.UtcNow,

@@ -1,6 +1,6 @@
 using Shared.BaseClasses;
 
-namespace FleetService.Interfaces.Services;
+namespace FleetService.Application.Interfaces;
 
 public interface IDomainEventDispatcher
 {

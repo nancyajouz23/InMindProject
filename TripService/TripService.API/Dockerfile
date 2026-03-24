@@ -50,7 +50,7 @@ RUN dotnet publish "TripService.API.csproj" -c Release -o /app/publish
 
 
 
-# STAGE 4 — FINAL (PRODUCTION IMAGE)
+# STAGE 4 — FINAL 
 # Start from the lightweight runtime image
 FROM base AS final
 

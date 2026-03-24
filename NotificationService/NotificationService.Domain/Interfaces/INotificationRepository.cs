@@ -1,4 +1,3 @@
-// NotificationService.Domain.Interfaces.INotificationRepository.cs
 using NotificationService.Domain.Entities;
 
 namespace NotificationService.Domain.Interfaces;

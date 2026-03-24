@@ -1,4 +1,3 @@
-// NotificationService.Application.Services.NotificationAppService.cs
 using Microsoft.Extensions.Logging;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces;

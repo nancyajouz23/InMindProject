@@ -6,7 +6,6 @@ using FleetService.Application.Services;
 using FleetService.Domain.Entities;
 using FleetService.Domain.Enums;
 using FleetService.Domain.ValueObjects;
-using FleetService.Interfaces.Services;
 using FluentAssertions;
 using Moq;
 using Shared.BaseClasses;

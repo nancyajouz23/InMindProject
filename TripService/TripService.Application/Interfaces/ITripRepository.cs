@@ -6,7 +6,6 @@ namespace TripService.Application.Interfaces;
 public interface ITripRepository
 {
     Task<Trip?> GetByIdAsync(Guid id);
-    // Include logs when we need distance calculation or log history
     Task<Trip?> GetByIdWithLogsAsync(Guid id);
     Task<IEnumerable<Trip>>  GetByFilterAsync(
         Guid?       driverId,

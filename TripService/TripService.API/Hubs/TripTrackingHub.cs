@@ -19,9 +19,7 @@ public class TripTrackingHub : Hub
     }
     
     // ── Called by Dispatchers/Admins to subscribe to a trip ──────────────────
-
-    // Client calls: await connection.InvokeAsync("SubscribeToTrip", tripId)
-    // After this, client receives "ReceiveLocationUpdate" messages for that trip
+    
     [Authorize(Roles = "Admin,Dispatcher")]
     public async Task SubscribeToTrip(Guid tripId)
     {

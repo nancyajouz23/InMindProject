@@ -4,7 +4,6 @@ using FleetService.Application.Interfaces;
 using FleetService.Domain.Entities;
 using FleetService.Domain.Enums;
 using FleetService.Domain.ValueObjects;
-using FleetService.Interfaces.Services;
 using Shared.Exceptions;
 
 namespace FleetService.Application.Services;
@@ -36,8 +35,7 @@ public class VehicleService : IVehicleService
         var cached = await _cache.GetVehiclesAsync();
         if (cached != null)
             return cached;
-
-        // Cache miss — hit DB, then cache result
+        
         var vehicles = await _vehicleRepository.GetAllAsync();
         var dtos     = _mapper.Map<IEnumerable<VehicleDto>>(vehicles);
         await _cache.SetVehiclesAsync(dtos);
@@ -76,7 +74,7 @@ public class VehicleService : IVehicleService
         var vehicle = await _vehicleRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Vehicle {id} not found.");
         await _vehicleRepository.DeleteAsync(vehicle);
-        await _cache.InvalidateVehiclesAsync(); // ← invalidate after delete
+        await _cache.InvalidateVehiclesAsync(); 
     }
 
     public async Task<VehicleDto> ActivateAsync(Guid id)
@@ -96,7 +94,6 @@ public class VehicleService : IVehicleService
             ?? throw new NotFoundException($"Vehicle {id} not found.");
         vehicle.SendToMaintenance();
         await _vehicleRepository.UpdateAsync(vehicle);
-        // await _publisher.PublishVehicleStatusChangedAsync(vehicle.Id, vehicle.Status.ToString());
         await _dispatcher.DispatchAsync(vehicle);
         await _cache.InvalidateVehiclesAsync();
         return _mapper.Map<VehicleDto>(vehicle);

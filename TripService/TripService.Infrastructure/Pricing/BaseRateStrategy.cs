@@ -4,8 +4,6 @@ using Shared.ValueObjects;
 
 namespace TripService.Infrastructure.Pricing;
 
-// Base rate varies by vehicle type
-// Rates are configurable via appsettings.json — not hardcoded
 public class BaseRateStrategy : IPricingStrategy
 {
     private readonly IConfiguration _configuration;
@@ -19,7 +17,6 @@ public class BaseRateStrategy : IPricingStrategy
 
     public Money Calculate(PricingContext context)
     {
-        // Read rates from configuration — injectable, not hardcoded
         var rate = context.VehicleType switch
         {
             "Sedan" => _configuration.GetValue<decimal>("Pricing:BaseRates:Sedan", 5.00m),

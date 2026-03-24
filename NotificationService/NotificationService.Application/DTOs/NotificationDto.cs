@@ -13,10 +13,3 @@ public record NotificationDto(
     Guid?    TripId
 );
  
-public record MarkReadRequest(Guid NotificationId);
- 
-public record NotificationQueryRequest(
-    string? Role       = null,
-    Guid?   UserId     = null,
-    bool?   UnreadOnly = null
-);
