@@ -131,7 +131,10 @@ public class VehicleService : IVehicleService
         await _vehicleRepository.UpdateAsync(vehicle);
         await _driverRepository.UpdateAsync(driver);
         await _dispatcher.DispatchAsync(vehicle);
+        
         await _cache.InvalidateVehiclesAsync();
+        await _cache.InvalidateDriversAsync();
+        
         return _mapper.Map<VehicleDto>(vehicle);
     }
 
@@ -147,7 +150,10 @@ public class VehicleService : IVehicleService
         await _vehicleRepository.UpdateAsync(vehicle);
         await _driverRepository.UpdateAsync(driver);
         await _dispatcher.DispatchAsync(vehicle);
+        
         await _cache.InvalidateVehiclesAsync();
+        await _cache.InvalidateDriversAsync();
+        
         return _mapper.Map<VehicleDto>(vehicle);
     }
 
