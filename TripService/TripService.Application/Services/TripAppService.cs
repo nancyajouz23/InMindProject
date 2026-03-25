@@ -100,6 +100,9 @@ public class TripAppService
         trip.Start();
         await _tripRepository.UpdateAsync(trip);
         await _dispatcher.DispatchAsync(trip); 
+        
+        await _availabilityCache.SetVehicleAvailableAsync(trip.VehicleId, false);
+        
         return _mapper.Map<TripDto>(trip);
     }
 
@@ -110,6 +113,9 @@ public class TripAppService
         trip.Complete();
         await _tripRepository.UpdateAsync(trip);
         await _dispatcher.DispatchAsync(trip); 
+        
+        await _availabilityCache.SetVehicleAvailableAsync(trip.VehicleId, true);
+        
         return _mapper.Map<TripDto>(trip);
     }
 

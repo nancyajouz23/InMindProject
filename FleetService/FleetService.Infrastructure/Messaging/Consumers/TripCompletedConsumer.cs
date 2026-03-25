@@ -12,17 +12,20 @@ public class TripCompletedConsumer : IConsumer<TripCompletedMessage>
     private readonly IDriverRepository  _driverRepository;
     private readonly ILogger<TripCompletedConsumer> _logger;
     private readonly IFleetCacheService _cache; 
+    private readonly IDomainEventDispatcher _dispatcher;
 
     public TripCompletedConsumer(
         IVehicleRepository vehicleRepository,
         IDriverRepository  driverRepository,
         ILogger<TripCompletedConsumer> logger,
-        IFleetCacheService cache)
+        IFleetCacheService cache,
+        IDomainEventDispatcher dispatcher)
     {
         _vehicleRepository = vehicleRepository;
         _driverRepository  = driverRepository;
         _logger            = logger;
         _cache             = cache;
+        _dispatcher        = dispatcher;
     }
 
     public async Task Consume(ConsumeContext<TripCompletedMessage> context)
@@ -54,7 +57,11 @@ public class TripCompletedConsumer : IConsumer<TripCompletedMessage>
 
         // Invalidate cache because vehicle mileage and driver status changed
         await _cache.InvalidateVehiclesAsync();
+        
+        await _dispatcher.DispatchAsync(driver);
+        
         await _cache.InvalidateDriversAsync();
+        
 
         _logger.LogInformation(
             "CACHE INVALIDATED after TripCompleted | Vehicle: {VehicleId} | Driver: {DriverId}",
