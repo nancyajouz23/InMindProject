@@ -61,7 +61,9 @@ public class DriverService
         await _driverRepository.AddAsync(driver);
         await _dispatcher.DispatchAsync(driver);
         
-        await _publisher.PublishDriverLicenseExpiryAsync(driver.Id, driver.LicenseExpiry);
+        var daysUntilExpiry = (driver.LicenseExpiry - DateTime.UtcNow).Days;
+        if (daysUntilExpiry <= 30)
+            await _publisher.PublishDriverLicenseExpiryAsync(driver.Id, driver.LicenseExpiry);
         
         await _cache.InvalidateDriversAsync();
         return _mapper.Map<DriverDto>(driver);
@@ -74,6 +76,12 @@ public class DriverService
         driver.UpdateDetails(dto.FirstName, dto.LastName, dto.LicenseExpiry);
         await _driverRepository.UpdateAsync(driver);
         await _dispatcher.DispatchAsync(driver);
+        
+        var daysUntilExpiry = (driver.LicenseExpiry - DateTime.UtcNow).Days;
+        if (daysUntilExpiry <= 30)
+            await _publisher.PublishDriverLicenseExpiryAsync(driver.Id, driver.LicenseExpiry);
+
+        
         await _cache.InvalidateDriversAsync();
         return _mapper.Map<DriverDto>(driver);
     }
