@@ -14,20 +14,17 @@ public class DriverService
     private readonly IMapper           _mapper;
     private readonly IFleetCacheService _cache;
     private readonly IDomainEventDispatcher _dispatcher;
-    private readonly IFleetEventPublisher _publisher;
 
     public DriverService(
         IDriverRepository driverRepository, 
         IMapper mapper,
         IFleetCacheService cache,
-        IDomainEventDispatcher dispatcher,
-        IFleetEventPublisher publisher)
+        IDomainEventDispatcher dispatcher)
     {
         _driverRepository = driverRepository;
         _mapper           = mapper;
         _cache = cache;
         _dispatcher = dispatcher;
-        _publisher = publisher;
     }
 
     public async Task<IEnumerable<DriverDto>> GetAllAsync()
@@ -52,6 +49,7 @@ public class DriverService
     public async Task<DriverDto> CreateAsync(CreateDriverDto dto)
     {
         var licenseNumber = new LicenseNumber(dto.LicenseNumber);
+        
         var driver = new Driver(Guid.NewGuid(), 
             dto.FirstName, 
             dto.LastName,
@@ -60,10 +58,6 @@ public class DriverService
         
         await _driverRepository.AddAsync(driver);
         await _dispatcher.DispatchAsync(driver);
-        
-        var daysUntilExpiry = (driver.LicenseExpiry - DateTime.UtcNow).Days;
-        if (daysUntilExpiry <= 30)
-            await _publisher.PublishDriverLicenseExpiryAsync(driver.Id, driver.LicenseExpiry);
         
         await _cache.InvalidateDriversAsync();
         return _mapper.Map<DriverDto>(driver);
@@ -76,11 +70,6 @@ public class DriverService
         driver.UpdateDetails(dto.FirstName, dto.LastName, dto.LicenseExpiry);
         await _driverRepository.UpdateAsync(driver);
         await _dispatcher.DispatchAsync(driver);
-        
-        var daysUntilExpiry = (driver.LicenseExpiry - DateTime.UtcNow).Days;
-        if (daysUntilExpiry <= 30)
-            await _publisher.PublishDriverLicenseExpiryAsync(driver.Id, driver.LicenseExpiry);
-
         
         await _cache.InvalidateDriversAsync();
         return _mapper.Map<DriverDto>(driver);

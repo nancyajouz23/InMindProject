@@ -22,7 +22,6 @@ public class NotificationsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetMyNotifications([FromQuery] bool? unreadOnly = null)
     {
-        // Extract all roles from JWT
         var roles = User.Claims
             .Where(c => c.Type == ClaimTypes.Role)
             .Select(c => c.Value)
@@ -31,26 +30,10 @@ public class NotificationsController : ControllerBase
         if (!roles.Any())
             return Unauthorized("No roles found in token.");
 
-        // Collect notifications for all user's roles
-        var notifications = new List<NotificationDto>();
-        
-        foreach (var role in roles)
-        {
-            // Only get notifications for fleet management roles
-            if (new[] { "Admin", "FleetManager", "Dispatcher", "Driver" }.Contains(role))
-            {
-                var roleNotifications = await _service.GetByRoleAsync(role, unreadOnly);
-                notifications.AddRange(roleNotifications);
-            }
-        }
-
-        // Remove duplicates and return sorted by most recent
-        return Ok(notifications
-            .DistinctBy(n => n.Id)
-            .OrderByDescending(n => n.CreatedAt));
+        var notifications = await _service.GetMyNotificationsAsync(roles, unreadOnly);
+        return Ok(notifications);
     }
     
-
     // Get all notifications for a specific role.
     [HttpGet("role/{role}")]
     [Authorize(Roles = "Admin,FleetManager")]
@@ -58,10 +41,6 @@ public class NotificationsController : ControllerBase
         [FromRoute] string role,
         [FromQuery] bool? unreadOnly = null)
     {
-        // Validate role is one we support
-        if (!new[] { "Admin", "FleetManager", "Dispatcher", "Driver" }.Contains(role))
-            return BadRequest($"Invalid role: {role}");
-
         var result = await _service.GetByRoleAsync(role, unreadOnly);
         return Ok(result);
     }
@@ -80,31 +59,12 @@ public class NotificationsController : ControllerBase
     [HttpPatch("{id:guid}/read")]
     public async Task<IActionResult> MarkRead([FromRoute] Guid id)
     {
-        var notification = await _service.GetByIdAsync(id);
-        
-        if (notification == null)
-            throw new NotFoundException($"Notification {id} not found.");
-
-        // Get user's roles from JWT
-        var userRoles = User.Claims
+        var roles = User.Claims
             .Where(c => c.Type == ClaimTypes.Role)
-            .Select(c => c.Value)
-            .Where(r => new[] { "Admin", "FleetManager", "Dispatcher", "Driver" }.Contains(r))
-            .ToList();
+            .Select(c => c.Value);
 
-        // Check authorization
-        bool isAuthorized = userRoles.Contains("Admin") || 
-                            userRoles.Contains(notification.TargetRole);
+        await _service.MarkAsReadAsync(id, roles);
 
-        if (!isAuthorized)
-        {
-            throw new ForbiddenException(
-                $"You cannot mark this notification as read. " +
-                $"This notification is for role '{notification.TargetRole}' " +
-                $"but you have roles: {string.Join(", ", userRoles)}");
-        }
-
-        await _service.MarkAsReadAsync(id);
         return NoContent();
     }
 }

@@ -37,6 +37,9 @@ public class DomainEventDispatcher : IDomainEventDispatcher
                 case DriverStatusChangedEvent e:
                     await _publisher.PublishDriverStatusChangedAsync(e.DriverId, e.NewStatus.ToString());
                     break;
+                case DriverLicenseExpiryEvent e:
+                    await _publisher.PublishDriverLicenseExpiryAsync(e.DriverId, e.LicenseExpiry);
+                    break;
             }
         }
         entity.ClearDomainEvents();

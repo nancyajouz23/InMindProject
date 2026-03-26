@@ -39,7 +39,8 @@ public class FleetEventPublisher : IFleetEventPublisher
             throw new NotFoundException($"Driver {driverId} not found.");
         
         await _publishEndpoint.Publish(new DriverAssignedMessage(vehicleId, driverId));
-        await _publishEndpoint.Publish(new DriverLicenseExpiryMessage(driverId, driver.LicenseExpiry));
+        await PublishDriverLicenseExpiryAsync(driverId, driver.LicenseExpiry);
+        
         _logger.LogInformation(
             "PUBLISHED: DriverAssigned | VehicleId: {VehicleId} | DriverId: {DriverId}",
             vehicleId, driverId);

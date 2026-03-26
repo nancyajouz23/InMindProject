@@ -125,11 +125,15 @@ public class VehicleService : IVehicleService
     {
         var vehicle = await _vehicleRepository.GetByIdAsync(vehicleId)
             ?? throw new NotFoundException($"Vehicle {vehicleId} not found.");
+        
         var driver = await _driverRepository.GetByIdAsync(driverId)
             ?? throw new NotFoundException($"Driver {driverId} not found.");
+        
         vehicle.AssignDriver(driver);
+        
         await _vehicleRepository.UpdateAsync(vehicle);
         await _driverRepository.UpdateAsync(driver);
+        
         await _dispatcher.DispatchAsync(vehicle);
         
         await _cache.InvalidateVehiclesAsync();
@@ -146,9 +150,12 @@ public class VehicleService : IVehicleService
             throw new DomainException("Vehicle has no assigned driver.");
         var driver = await _driverRepository.GetByIdAsync(vehicle.DriverId.Value)
             ?? throw new NotFoundException("Driver not found.");
+        
         vehicle.UnassignDriver(driver);
+        
         await _vehicleRepository.UpdateAsync(vehicle);
         await _driverRepository.UpdateAsync(driver);
+        
         await _dispatcher.DispatchAsync(vehicle);
         
         await _cache.InvalidateVehiclesAsync();
@@ -161,10 +168,13 @@ public class VehicleService : IVehicleService
     {
         VehicleStatus? statusEnum = null;
         VehicleType?   typeEnum   = null;
+        
         if (!string.IsNullOrWhiteSpace(status) &&
             Enum.TryParse<VehicleStatus>(status, true, out var ps)) statusEnum = ps;
+        
         if (!string.IsNullOrWhiteSpace(type) &&
             Enum.TryParse<VehicleType>(type, true, out var pt))     typeEnum   = pt;
+        
         var vehicles = await _vehicleRepository.GetByFilterAsync(statusEnum, typeEnum);
         return _mapper.Map<IEnumerable<VehicleDto>>(vehicles);
     }

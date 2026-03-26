@@ -23,7 +23,6 @@ public class TripTrackingHub : Hub
     [Authorize(Roles = "Admin,Dispatcher")]
     public async Task SubscribeToTrip(Guid tripId)
     {
-        // Add this connection to a SignalR group named after the trip
         await Groups.AddToGroupAsync(Context.ConnectionId, tripId.ToString());
 
         _logger.LogInformation(

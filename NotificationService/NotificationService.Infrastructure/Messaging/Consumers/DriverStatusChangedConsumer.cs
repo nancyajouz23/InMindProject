@@ -26,40 +26,16 @@ public class DriverStatusChangedConsumer : IConsumer<DriverStatusChangedMessage>
             "NOTIFICATION-SVC received DriverStatusChanged | DriverId: {DriverId} | Status: {Status}",
             msg.DriverId, msg.NewStatus);
 
-        switch (msg.NewStatus)
+        // Only notify when driver becomes inactive — requires FleetManager attention
+        if (msg.NewStatus == "Inactive")
         {
-            case "Active":
-                await _notifications.CreateAsync(
-                    type: "DriverAvailable",
-                    message: $"Driver {msg.DriverId} is now available.",
-                    targetRole: "FleetManager",
-                    driverId: msg.DriverId
-                );
-                break;
-
-            case "OnTrip":
-                await _notifications.CreateAsync(
-                    type: "DriverOnTrip",
-                    message: $"Driver {msg.DriverId} is now on trip.",
-                    targetRole: "FleetManager",
-                    driverId: msg.DriverId
-                );
-                break;
-
-            case "Inactive":
-                await _notifications.CreateAsync(
-                    type: "DriverUnavailable",
-                    message: $"Driver {msg.DriverId} is currently unavailable.",
-                    targetRole: "FleetManager",
-                    driverId: msg.DriverId
-                );
-                break;
-            
-            default:
-                _logger.LogWarning(
-                    "Unknown driver status: {Status} for DriverId: {DriverId}",
-                    msg.NewStatus, msg.DriverId);
-                break;
+            await _notifications.CreateAsync(
+                type:       "DriverInactive",
+                message:    $"Driver {msg.DriverId} has been deactivated and is no longer available.",
+                targetRole: "FleetManager",
+                driverId:   msg.DriverId
+            );
         }
+        
     }
 }

@@ -4,6 +4,7 @@ using NotificationService.Application.Interfaces;
 using NotificationService.Domain.Entities;
 using NotificationService.Domain.Exceptions;
 using NotificationService.Domain.Interfaces;
+using Shared.Exceptions;
 
 namespace NotificationService.Application.Services;
 
@@ -50,14 +51,60 @@ public class NotificationAppService : INotificationService
         return items.Select(ToDto);
     }
 
-    public async Task MarkAsReadAsync(Guid notificationId)
+    public async Task MarkAsReadAsync(Guid notificationId, IEnumerable<string> userRoles)
     {
         var notification = await _repo.GetByIdAsync(notificationId)
                            ?? throw new NotificationNotFoundException(notificationId);
+
+        // Authorization logic moved here ✅
+        bool isAuthorized = userRoles.Contains("Admin") ||
+                            userRoles.Contains(notification.TargetRole);
+
+        if (!isAuthorized)
+        {
+            throw new ForbiddenException(
+                $"You cannot mark this notification as read. " +
+                $"This notification is for role '{notification.TargetRole}' " +
+                $"but you have roles: {string.Join(", ", userRoles)}");
+        }
+
         notification.MarkAsRead();
+
         await _repo.UpdateAsync(notification);
         await _repo.SaveChangesAsync();
     }
+    
+    public async Task<IEnumerable<NotificationDto>> GetMyNotificationsAsync(
+        IEnumerable<string> roles, bool? unreadOnly)
+    {
+        var notifications = new List<NotificationDto>();
+
+        foreach (var role in roles.Where(r => ValidRoles.Contains(r)))
+        {
+            if (role == "Driver")
+            {
+                // Drivers only see their own notifications, not all drivers'
+                var roleNotifications = await _repo.GetByRoleAsync(role, unreadOnly);
+                notifications.AddRange(roleNotifications
+                    .Where(n => n.TargetUserId == null)  // broadcast to all drivers
+                    .Select(ToDto));
+            }
+            else
+            {
+                var roleNotifications = await _repo.GetByRoleAsync(role, unreadOnly);
+                notifications.AddRange(roleNotifications.Select(ToDto));
+            }
+        }
+
+        return notifications
+            .DistinctBy(n => n.Id)
+            .OrderByDescending(n => n.CreatedAt);
+    }
+
+    private static readonly string[] ValidRoles =
+    {
+        "Admin", "FleetManager", "Dispatcher", "Driver"
+    };
 
     private static NotificationDto ToDto(Notification n) => new(
         n.Id, n.Type, n.Message, n.TargetRole,

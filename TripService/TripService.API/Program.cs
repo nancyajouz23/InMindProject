@@ -3,6 +3,8 @@ using Shared.Middleware;
 using TripService.API.Extensions;
 using TripService.API.Hubs;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
+using TripService.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,19 @@ builder.Services.AddTripApplication();
 
 // ── Build ─────────────────────────────────────────────────────
 var app = builder.Build();
+
+// ── Migrations ────────────────────────────────────────────────
+try
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<TripDbContext>();
+    await db.Database.MigrateAsync();
+    Log.Information("Trip DB migrations applied");
+}
+catch (Exception ex)
+{
+    Log.Warning("Migration skipped: {Error}", ex.Message);
+}
 
 // ── Pipeline ──────────────────────────────────────────────────
 app.UseSwagger();

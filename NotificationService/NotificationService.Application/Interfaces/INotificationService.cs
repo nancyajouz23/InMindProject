@@ -11,5 +11,6 @@ public interface INotificationService
     Task<NotificationDto?> GetByIdAsync(Guid id); // ← ADD THIS
     Task<IEnumerable<NotificationDto>> GetByRoleAsync(string role, bool? unreadOnly = null);
     Task<IEnumerable<NotificationDto>> GetByDriverIdAsync(Guid driverId, bool? unreadOnly = null);
-    Task MarkAsReadAsync(Guid notificationId);
+    Task<IEnumerable<NotificationDto>> GetMyNotificationsAsync(IEnumerable<string> roles, bool? unreadOnly);
+    Task MarkAsReadAsync(Guid notificationId, IEnumerable<string> userRoles);
 }

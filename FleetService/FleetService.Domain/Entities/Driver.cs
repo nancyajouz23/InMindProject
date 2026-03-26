@@ -30,13 +30,15 @@ public class Driver : AggregateRoot
             throw new ArgumentException("First name required.");
         if (string.IsNullOrWhiteSpace(lastName))  
             throw new ArgumentException("Last name required.");
-
+        
         Id            = id;
         FirstName     = firstName;
         LastName      = lastName;
         LicenseNumber = licenseNumber;
         LicenseExpiry = licenseExpiry;
         Status        = DriverStatus.Available;
+        
+        CheckLicenseExpiry();
         
         AddDomainEvent(new DriverStatusChangedEvent(Id, Status));
     }
@@ -83,10 +85,21 @@ public class Driver : AggregateRoot
             throw new ArgumentException("First name required.");
         if (string.IsNullOrWhiteSpace(lastName))  
             throw new ArgumentException("Last name required.");
+        
+        
         FirstName     = firstName;
         LastName      = lastName;
         LicenseExpiry = licenseExpiry;
+        
+        CheckLicenseExpiry();
     }
-    
+    private void CheckLicenseExpiry()
+    {
+        var daysUntilExpiry = (LicenseExpiry - DateTime.UtcNow).Days;
+        if (daysUntilExpiry <= 30)
+        {
+            AddDomainEvent(new DriverLicenseExpiryEvent(Id, LicenseExpiry));
+        }
+    }
 
 }

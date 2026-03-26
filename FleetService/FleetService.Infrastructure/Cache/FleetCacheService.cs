@@ -16,10 +16,10 @@ public class FleetCacheService : IFleetCacheService
     private const string VehiclesKey = "vehicles:all";
     private const string DriversKey  = "drivers:all";
     
-    // How long data stays cached — 5 minutes
+    // How long data stays cached — 24 hours
     private static readonly DistributedCacheEntryOptions CacheOptions = new()
     {
-        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
     };
 
     public FleetCacheService(IDistributedCache cache, ILogger<FleetCacheService> logger)

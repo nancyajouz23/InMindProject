@@ -61,15 +61,6 @@ public class DriversController : ControllerBase
         var driver = await _driverService.UpdateAsync(id, dto);
         return Ok(driver);
     }
-
-    // DELETE api/drivers/{id}
-    // [HttpDelete("{id:guid}")]
-    // [Authorize(Roles = "Admin,FleetManager")]
-    // public async Task<IActionResult> Delete(Guid id)
-    // {
-    //     await _driverService.DeleteAsync(id);
-    //     return NoContent();
-    // }
     
     [HttpPut("{id:guid}/deactivate")]
     [Authorize(Roles = "Admin,FleetManager")]
